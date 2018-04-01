@@ -60,7 +60,6 @@ class FlowerEstimator:
                 print('Yielding from input queue')
             yield self.input_queue.get()
 
-
     def predict_from_queue(self):
         """ Adds a prediction from the model to the output_queue.
 
