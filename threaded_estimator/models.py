@@ -62,7 +62,7 @@ class FlowerClassifier:
 
         """
 
-        return list(self.estimator.predict(input_fn=lambda: self.predict_input_fn(features)))[0]
+        return self.estimator.predict(input_fn=lambda: self.predict_input_fn(features))
 
     def load_estimator(self):
         """
@@ -228,6 +228,11 @@ class make_threaded():
                 print('Putting in output queue')
             self.output_queue.put(i)
 
+    def predict_gen(self, predictions):
+
+        for p in [predictions]:
+            yield p
+
     def predict(self, features):
         """
         Overwrites .predict in FlowerClassifierBasic.
@@ -252,14 +257,12 @@ class make_threaded():
         """
 
         # Get predictions dictionary
-        if self.threaded:
-            features = dict(features)
-            self.input_queue.put(features)
-            predictions = self.output_queue.get()  # The latest predictions generator
-        else:
-            predictions = self.f.estimator.predict(input_fn=lambda: self.f.predict_input_fn(features))
 
-        # TODO: list vs. generator vs. dict handling
+        features = dict(features)
+        self.input_queue.put(features)
+        predictions = self.output_queue.get()  # The latest predictions dict
+        predictions = self.predict_gen(predictions) # Yield a generator, to match API of base class
+
         return predictions
 
     def queued_predict_input_fn(self):
