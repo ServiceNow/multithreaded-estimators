@@ -1,13 +1,13 @@
 import time
 
-from threaded_estimator import models
+from threaded_estimator.models import FlowerClassifier, make_threaded
 import numpy as np
 import pytest
 import tensorflow as tf
 
 
-def test_iris_estimator_trains():
-    fe = models.FlowerClassifierThreaded(threaded=False)
+@pytest.mark.parametrize('fe',[FlowerClassifier(), make_threaded(FlowerClassifier())])
+def test_iris_estimator_trains(fe):
     fe.train(steps=10)
 
 predict_x = {
@@ -19,7 +19,7 @@ predict_x = {
 
 
 def test_normal_input_fn():
-    fe = models.FlowerClassifierThreaded(threaded=False)
+    fe = FlowerClassifier()
     ds = fe.predict_input_fn(predict_x)
     value = ds.make_one_shot_iterator().get_next()
 
@@ -30,48 +30,47 @@ def test_normal_input_fn():
 
 
 def test_predictions_change_with_training():
-    fe = models.FlowerClassifierThreaded(threaded=False)
-    predictions1 = list(fe.predict(features=predict_x))
+
+    fe = FlowerClassifier()
+    predictions1 = fe.predict(features=predict_x)
     fe.train(steps=100)
-    predictions2 = list(fe.predict(features=predict_x))
+    predictions2 = fe.predict(features=predict_x)
 
+    print(predictions1['logits'])
     with pytest.raises(AssertionError):
-        np.testing.assert_array_equal(predictions1[0]['logits'],
-                                      predictions2[0]['logits'])
+        np.testing.assert_array_equal(predictions1['logits'],
+                                      predictions2['logits'])
 
 
-@pytest.mark.parametrize('threaded', [False, True])
-def test_iris_estimator_predict_deterministic(threaded):
-    fe = models.FlowerClassifierThreaded(threaded=threaded)
+@pytest.mark.parametrize('fe',[FlowerClassifier(), make_threaded(FlowerClassifier())])
+def test_iris_estimator_predict_deterministic(fe):
+
     predictions1 = fe.predict(features=predict_x)
     predictions2 = fe.predict(features=predict_x)
 
-    if not threaded:
-        predictions1 = list(predictions1)[0]
-        predictions2 = list(predictions2)[0]
+    print(predictions1)
+    print(predictions2)
 
-    print(threaded, predictions1)
-    print(threaded, predictions2)
     np.testing.assert_array_equal(predictions1['logits'],
                                   predictions2['logits'])
 
 
 def test_threaded_faster_than_non_threaded():
 
-    fe_threaded = models.FlowerClassifierThreaded(threaded=True)
-    fe_unthreaded = models.FlowerClassifier()
+    fe_threaded = make_threaded(FlowerClassifier())
+    fe_unthreaded = FlowerClassifier()
 
     n_epochs = 100
 
     print('starting unthreaded')
     t1 = time.time()
     for _ in range(n_epochs):
-        predictions = list(fe_unthreaded.predict(features=predict_x))
+        predictions = fe_unthreaded.predict(features=predict_x)
 
     print('starting threaded')
     t2 = time.time()
     for _ in range(n_epochs):
-        predictions = list(fe_threaded.predict(features=predict_x))
+        predictions = fe_threaded.predict(features=predict_x)
 
     t3 = time.time()
 

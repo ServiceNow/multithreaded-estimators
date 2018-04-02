@@ -62,7 +62,7 @@ class FlowerClassifier:
 
         """
 
-        return self.estimator.predict(input_fn=lambda: self.predict_input_fn(features))
+        return list(self.estimator.predict(input_fn=lambda: self.predict_input_fn(features)))[0]
 
     def load_estimator(self):
         """
@@ -168,32 +168,24 @@ class FlowerClassifier:
         return dataset
 
 
-class FlowerClassifierThreaded(FlowerClassifier):
+class make_threaded():
 
-    def __init__(self, model_path='./trained_models/',
-                 threaded=True,
-                 verbose=False):
+    # Decorator to render the basic flower estimator threaded and fast
+
+    def __init__(self, f):
         """
         Parameters
         ----------
-        model_path: str
-            Location from which to load the model.
-
-        threaded: Boolean [True]
-            Whether to use multi-threaded execution for inference.
-            If False, the model will use a new generator for each sample that is passed to it, and reload the entire
-            model each time.
-
+        f: the function being decorated
 
         """
 
-        super(FlowerClassifierThreaded, self).__init__(model_path=model_path,
-                                                       verbose=verbose)
+        self.f = f
 
         self.input_queue = Queue(maxsize=1)
         self.output_queue = Queue(maxsize=1)
 
-        self.threaded = threaded
+        self.threaded = True
 
         if self.threaded:
             # We set the generator thread as daemon
@@ -203,6 +195,12 @@ class FlowerClassifierThreaded(FlowerClassifier):
             self.prediction_thread = Thread(target=self.predict_from_queue, daemon=True)
             self.prediction_thread.start()
 
+    def __getattr__(self, k):
+        try:
+            return getattr(self.f, k)
+        except KeyError:
+            raise AttributeError
+
     def generate_from_queue(self):
         """ Generator which yields items from the input queue.
         This lives within our 'prediction thread'.
@@ -210,7 +208,7 @@ class FlowerClassifierThreaded(FlowerClassifier):
         """
 
         while True:
-            if self.verbose:
+            if self.f.verbose:
                 print('Yielding from input queue')
             yield self.input_queue.get()
 
@@ -225,8 +223,8 @@ class FlowerClassifierThreaded(FlowerClassifier):
 
         """
 
-        for i in self.estimator.predict(input_fn=self.queued_predict_input_fn):
-            if self.verbose:
+        for i in self.f.estimator.predict(input_fn=self.queued_predict_input_fn):
+            if self.f.verbose:
                 print('Putting in output queue')
             self.output_queue.put(i)
 
@@ -259,7 +257,7 @@ class FlowerClassifierThreaded(FlowerClassifier):
             self.input_queue.put(features)
             predictions = self.output_queue.get()  # The latest predictions generator
         else:
-            predictions = self.estimator.predict(input_fn=lambda: self.predict_input_fn(features))
+            predictions = self.f.estimator.predict(input_fn=lambda: self.f.predict_input_fn(features))
 
         # TODO: list vs. generator vs. dict handling
         return predictions
@@ -273,7 +271,7 @@ class FlowerClassifierThreaded(FlowerClassifier):
 
         """
 
-        if self.verbose:
+        if self.f.verbose:
             print("QUEUED INPUT FUNCTION CALLED")
 
         # Fetch the inputs from the input queue
