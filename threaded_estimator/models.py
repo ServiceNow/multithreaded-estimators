@@ -228,7 +228,8 @@ class make_threaded():
                 print('Putting in output queue')
             self.output_queue.put(i)
 
-    def predict_gen(self, predictions):
+    @staticmethod
+    def predict_gen(predictions):
 
         for p in [predictions]:
             yield p
