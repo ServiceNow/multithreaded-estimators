@@ -29,6 +29,18 @@ def test_normal_input_fn():
     assert isinstance(features, dict)
 
 
+def test_prediction_api_is_constant():
+
+    fe_threaded = make_threaded(FlowerClassifier())
+    fe_unthreaded = FlowerClassifier()
+
+    p1 = fe_threaded.predict(predict_x)
+    p2 = fe_unthreaded.predict(predict_x)
+
+    assert type(p1) is type(p2)
+    assert len(p1) is len(p2)
+
+
 def test_predictions_change_with_training():
 
     fe = FlowerClassifier()
