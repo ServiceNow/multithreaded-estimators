@@ -80,8 +80,8 @@ def test_threaded_faster_than_non_threaded():
 
     assert unthreaded_time > threaded_time
 
-    print(f'Threaded time was {threaded_time}; \n'
-          f'Unthreaded time was {unthreaded_time};  \n'
+    print(f'Threaded time was {threaded_time}; s\n'
+          f'Unthreaded time was {unthreaded_time};  s\n'
           f'Threaded was {unthreaded_time/threaded_time} times faster!')
 
 
