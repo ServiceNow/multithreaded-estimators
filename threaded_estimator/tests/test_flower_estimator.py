@@ -56,14 +56,10 @@ def test_iris_estimator_predict_deterministic(threaded):
                                   predictions2['logits'])
 
 
-
-
 def test_threaded_faster_than_non_threaded():
 
     fe_threaded = models.FlowerClassifierThreaded(threaded=True)
-    fe_threaded.train(1000)
-    fe_unthreaded = models.FlowerClassifierThreaded(threaded=False)
-    fe_unthreaded.train(1000)
+    fe_unthreaded = models.FlowerClassifier()
 
     n_epochs = 100
 
@@ -84,8 +80,8 @@ def test_threaded_faster_than_non_threaded():
 
     assert unthreaded_time > threaded_time
 
-    print(f'Threaded time was {threaded_time};  '
-          f'Unthreaded time was {unthreaded_time};  '
+    print(f'Threaded time was {threaded_time}; \n'
+          f'Unthreaded time was {unthreaded_time};  \n'
           f'Threaded was {unthreaded_time/threaded_time} times faster!')
 
 

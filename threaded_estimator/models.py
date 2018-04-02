@@ -284,4 +284,3 @@ class FlowerClassifierThreaded(FlowerClassifier):
                                                                'PetalWidth': tf.float32})
 
         return dataset
-
