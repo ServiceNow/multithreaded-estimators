@@ -1,13 +1,13 @@
 import time
 
-from threaded_estimator import model
+from threaded_estimator import models
 import numpy as np
 import pytest
 import tensorflow as tf
 
 
 def test_iris_estimator_trains():
-    fe = model.FlowerEstimator(threaded=False)
+    fe = models.FlowerClassifierThreaded(threaded=False)
     fe.train(steps=10)
 
 predict_x = {
@@ -19,7 +19,7 @@ predict_x = {
 
 
 def test_normal_input_fn():
-    fe = model.FlowerEstimator(threaded=False)
+    fe = models.FlowerClassifierThreaded(threaded=False)
     ds = fe.predict_input_fn(predict_x)
     value = ds.make_one_shot_iterator().get_next()
 
@@ -30,7 +30,7 @@ def test_normal_input_fn():
 
 
 def test_predictions_change_with_training():
-    fe = model.FlowerEstimator(threaded=False)
+    fe = models.FlowerClassifierThreaded(threaded=False)
     predictions1 = list(fe.predict(features=predict_x))
     fe.train(steps=100)
     predictions2 = list(fe.predict(features=predict_x))
@@ -42,7 +42,7 @@ def test_predictions_change_with_training():
 
 @pytest.mark.parametrize('threaded', [False, True])
 def test_iris_estimator_predict_deterministic(threaded):
-    fe = model.FlowerEstimator(threaded=threaded)
+    fe = models.FlowerClassifierThreaded(threaded=threaded)
     predictions1 = fe.predict(features=predict_x)
     predictions2 = fe.predict(features=predict_x)
 
@@ -60,9 +60,9 @@ def test_iris_estimator_predict_deterministic(threaded):
 
 def test_threaded_faster_than_non_threaded():
 
-    fe_threaded = model.FlowerEstimator(threaded=True)
+    fe_threaded = models.FlowerClassifierThreaded(threaded=True)
     fe_threaded.train(1000)
-    fe_unthreaded = model.FlowerEstimator(threaded=False)
+    fe_unthreaded = models.FlowerClassifierThreaded(threaded=False)
     fe_unthreaded.train(1000)
 
     n_epochs = 100
@@ -84,8 +84,8 @@ def test_threaded_faster_than_non_threaded():
 
     assert unthreaded_time > threaded_time
 
-    print(f'Threaded time was {threaded_time} \n'
-          f'Unthreaded time was {unthreaded_time} \n'
+    print(f'Threaded time was {threaded_time};  '
+          f'Unthreaded time was {unthreaded_time};  '
           f'Threaded was {unthreaded_time/threaded_time} times faster!')
 
 

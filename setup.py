@@ -8,5 +8,6 @@ setup(
     license='',
     author='archydeberker',
     author_email='archy@elementai.com',
-    description=''
+    description='',
+    requires=['tensorflow'],
 )
