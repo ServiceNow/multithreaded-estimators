@@ -168,7 +168,7 @@ class FlowerClassifier:
         return dataset
 
 
-class make_threaded():
+class ThreadedPrediction:
 
     # Decorator to render the basic flower estimator threaded and fast
 

@@ -1,6 +1,6 @@
 import time
 
-from threaded_estimator.models import FlowerClassifier, make_threaded
+from threaded_estimator.models import FlowerClassifier, ThreadedPrediction
 import numpy as np
 import pytest
 import tensorflow as tf
@@ -8,10 +8,10 @@ import tensorflow as tf
 tf.logging.set_verbosity(tf.logging.INFO)
 
 fe_unthreaded = FlowerClassifier()
-fe_threaded = make_threaded(FlowerClassifier())
+fe_threaded = ThreadedPrediction(FlowerClassifier())
 
 
-@pytest.mark.parametrize('fe',[FlowerClassifier(), make_threaded(FlowerClassifier())])
+@pytest.mark.parametrize('fe', [FlowerClassifier(), ThreadedPrediction(FlowerClassifier())])
 def test_iris_estimator_trains(fe):
     fe.train(steps=10)
 
@@ -56,7 +56,7 @@ def test_predictions_change_with_training():
                                       predictions2[0]['logits'])
 
 
-@pytest.mark.parametrize('fe', [FlowerClassifier(), make_threaded(FlowerClassifier())])
+@pytest.mark.parametrize('fe', [FlowerClassifier(), ThreadedPrediction(FlowerClassifier())])
 def test_iris_estimator_predict_deterministic(fe):
 
     predictions1 = list(fe.predict(features=predict_x))
