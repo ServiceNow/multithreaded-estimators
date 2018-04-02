@@ -41,24 +41,26 @@ class FlowerClassifier:
 
     def predict(self, features):
         """
-        Vanilla prediction function. Converts the generator produced by the estimator into a list
-        and returns the first item.
+        Vanilla prediction function. Returns a generator
 
         Intended for single-shot usage.
 
         Parameters
         ----------
-        input_str: str
-            String upon which to apply estimator.predict
+        features: dict
+            dict of input features, containing keys 'SepalLength'
+                                                    'SepalWidth'
+                                                    'PetalLength'
+                                                    'PetalWidth'
 
         Returns
         -------
-        predictions: dict
-            Dictionary including 'probs', 'outputs', 'predicted_class'
+        predictions: generator
+            Yields dictionaries containing  'probs'
+                                            'outputs'
+                                            'predicted_class'
 
         """
-
-        # Get predictions dictionary
 
         return self.estimator.predict(input_fn=lambda: self.predict_input_fn(features))
 
@@ -91,14 +93,39 @@ class FlowerClassifier:
             model_dir=self.model_path)
 
     def train(self, steps):
+        """
+        Parameters
+        ----------
+        steps: int
+            Number of steps to train for.
 
+        """
         self.estimator.train(
             input_fn=lambda: self.train_input_fn(self.train_x, self.train_y),
             steps=steps,
         )
 
     def train_input_fn(self, features, labels):
-        """An input function for training"""
+        """
+        For background on the data, see iris_data.py
+
+        Parameters
+        ----------
+        features: pandas dataframe
+            With columns  'SepalLength'
+                          'SepalWidth'
+                          'PetalLength'
+                          'PetalWidth'
+
+        labels: array
+            Flower names
+
+        Returns
+        -------
+        dataset: generator
+            Yields batches of size self.batch_size
+
+        """
 
         # Convert the inputs to a Dataset.
         dataset = tf.data.Dataset.from_tensor_slices((dict(features), labels))
@@ -110,7 +137,22 @@ class FlowerClassifier:
         return dataset
 
     def predict_input_fn(self, features):
-        """An input function for prediction"""
+        """
+
+        Parameters
+        ----------
+        features:  pandas dataframe or dict
+            with columns or keys  'SepalLength'
+                                  'SepalWidth'
+                                  'PetalLength'
+                                  'PetalWidth'
+
+        Returns
+        -------
+        dataset: generator
+            Yields batches of size self.batch_size
+
+        """
 
         if self.verbose:
             print("Standard predict_input_n call")
@@ -223,6 +265,13 @@ class FlowerClassifierThreaded(FlowerClassifier):
         return predictions
 
     def queued_predict_input_fn(self):
+        """
+        Queued version of the `predict_input_fn` in FlowerClassifier.
+
+        Instead of yielding a dataset from data as a parameter, we construct a Dataset from a generator,
+        which yields from the input queue.
+
+        """
 
         if self.verbose:
             print("QUEUED INPUT FUNCTION CALLED")
@@ -234,6 +283,5 @@ class FlowerClassifierThreaded(FlowerClassifier):
                                                                'PetalLength': tf.float32,
                                                                'PetalWidth': tf.float32})
 
-        # Return the dataset.
         return dataset
 
