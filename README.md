@@ -18,4 +18,4 @@ docker run threaded
 
 ## License
 
-This code is released under an MIT license. See [the license in full](license.md).
+This code is released under an Apache 2 license. See [the license in full](LICENSE).
