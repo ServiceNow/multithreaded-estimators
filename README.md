@@ -18,4 +18,4 @@ docker run threaded
 
 ## License
 
-This code needs a license. See issue https://github.com/ElementAI/multithreaded-estimators/issues/1
+This code is released under Apache 2. See the [license in full](LICENSE).
