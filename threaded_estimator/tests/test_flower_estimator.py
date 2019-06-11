@@ -85,5 +85,33 @@ def test_threaded_faster_than_non_threaded():
           f'Threaded was {unthreaded_time/threaded_time} times faster!')
 
 
+def test_generator_faster_than_threaded():
+
+    fe_threaded = models.FlowerClassifierThreaded(threaded=True)
+    fe_generator = models.FlowerClassifierGenerator()
+
+    n_epochs = 1000
+
+    print('starting threaded')
+    t1 = time.time()
+    for _ in range(n_epochs):
+        predictions = list(fe_threaded.predict(features=predict_x))
+
+    print('starting generator')
+    t2 = time.time()
+    for _ in range(n_epochs):
+        predictions = list(fe_generator.predict(features=predict_x))
+
+    t3 = time.time()
+
+    threaded_time = (t2-t1)
+    generator_time = (t3-t2)
+
+    assert generator_time < threaded_time
+
+    print(f'Threaded time was {threaded_time}; s\n'
+          f'Generator time was {generator_time};  s\n'
+          f'Generator was {threaded_time/generator_time} times faster!')
+
 
 
