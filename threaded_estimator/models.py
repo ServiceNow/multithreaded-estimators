@@ -1,10 +1,10 @@
 """ Module to expose trained models for inference."""
 
-import tensorflow as tf
-
-from tensorflow.contrib.learn import RunConfig
 from queue import Queue
 from threading import Thread
+
+import tensorflow as tf
+from tensorflow.contrib.learn import RunConfig
 
 from threaded_estimator import iris_data
 
@@ -35,9 +35,10 @@ class FlowerClassifier:
 
         self.model_path = model_path
 
-        self.estimator = self.load_estimator()
+        self.estimator: tf.estimator.Estimator = self.load_estimator()
 
         self.verbose = verbose
+        self.saved_model = None
 
     def predict(self, features):
         """
@@ -278,6 +279,72 @@ class FlowerClassifierThreaded(FlowerClassifier):
 
         # Fetch the inputs from the input queue
         dataset = tf.data.Dataset.from_generator(self.generate_from_queue,
+                                                 output_types={'SepalLength': tf.float32,
+                                                               'SepalWidth': tf.float32,
+                                                               'PetalLength': tf.float32,
+                                                               'PetalWidth': tf.float32})
+
+        return dataset
+
+
+class FlowerClassifierGenerator(FlowerClassifier):
+
+    def __init__(self, model_path='./trained_models/',
+                 verbose=False):
+        super(FlowerClassifierGenerator, self).__init__(model_path=model_path,
+                                                        verbose=verbose)
+        self.next_features = None
+        self.prediction = self.estimator.predict(input_fn=self.generator_predict_input_fn)
+
+    def generator(self):
+        """
+
+        Yield
+        -------
+        features: dict
+            dict of input features, containing keys 'SepalLength'
+                                                    'SepalWidth'
+                                                    'PetalLength'
+                                                    'PetalWidth'
+        """
+        while True:
+            yield self.next_features
+
+    def predict(self, features):
+        """
+        Overwrites .predict in FlowerClassifierBasic.
+
+
+        Parameters
+        ----------
+        features: dict
+            dict of input features, containing keys 'SepalLength'
+                                                    'SepalWidth'
+                                                    'PetalLength'
+                                                    'PetalWidth'
+
+        Yield
+        -------
+        predictions: dict
+            Dictionary containing   'probs'
+                                    'outputs'
+                                    'predicted_class'
+
+        """
+        self.next_features = features
+        keys = list(features.keys())
+        for _ in range(len(features[keys[0]])):
+            yield next(self.prediction)
+
+    def generator_predict_input_fn(self):
+        """
+        Construct a tf.data.Dataset from a generator
+
+        Return
+        -------
+        dataset: tf.data.Dataset
+        """
+        dataset = tf.data.Dataset.from_generator(self.generator,
                                                  output_types={'SepalLength': tf.float32,
                                                                'SepalWidth': tf.float32,
                                                                'PetalLength': tf.float32,
